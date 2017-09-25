@@ -1,0 +1,31 @@
+#!/usr/bin/env mlab
+
+FROM minutelab/mless
+
+FLAG port=8000 "port to use"
+FLAG name=mless "script name"
+
+NAME -domain $name
+
+SHARE /sam $spath
+
+EXPORT MLESS_DESKTOP=$parentip
+
+EXPOSE -both 8000 $port
+BACKCONN 5678
+
+# force subcontainer conntetion to route through this one to benefit from the BACKCONN
+NETDEF 192.168.200.0/24 -default
+
+WORKDIR /sam
+
+START << END
+  if [ -e ./ddns.sh ]
+  then
+    echo "registering DNS"
+    sh ./ddns.sh
+    echo
+  fi
+  [ -z "$*" ] && exec mless start
+  "$@"
+END

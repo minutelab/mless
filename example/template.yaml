@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: |
+  A sample Serverless project triggered from S3 CreateObject events
+
+Resources:
+  hashFile:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python2.7
+      Handler: lambda_function.hashFile
+      CodeUri: hash
+      Environment:
+        Variables:
+            ENV_TEST: Test
+      Mless:
+#          Debugger: pydevd
+
+  picHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python2.7
+      Handler: handler.Handle
+      CodeUri: go/build
+  hashProxy:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python2.7
+      Handler: hash.hashFile
+      CodeUri: hashproxy
+      Environment:
+        Variables:
+            PROXY_PATTERN:

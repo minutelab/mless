@@ -1,0 +1,50 @@
+#!/usr/bin/env mlab
+
+FROM eawsy/aws-lambda-go-shim
+
+FLAG handler=handler
+FLAG ldflags
+
+# We want fast compilation so we want to cache intermediate compilation between invocation
+# In general the expected directory structure (in the calling context) is:
+#
+# src - the actual sources (and where )
+# build - direcgtory containing the result
+# cache - intermeidate compilation
+#   global - for standard package
+#   local - for this
+#
+# The cache and build directories are meant not to be synced (by .mlignore)
+#
+# We mount the whole directory under /work and create symbolic links
+
+SET goroot=/root/go
+SET pkgpath=bitbucket.org/minutelab
+SET pkgname=testlambda
+
+SET builddir=/work/build
+SET cachedir=/work/cache
+
+SHARE /work $spath/..
+
+START << END
+   # link sources
+   mkdir -p $goroot/src/$pkgpath
+   ln -s /work/src $goroot/src/$pkgpath/$pkgname
+
+   # link cache
+   mkdir -p $cachedir/local
+   ln -s $cachedir/local $goroot/pkg
+   mkdir -p $cachedir/global
+   ln -s $cachedir/global /usr/local/go/pkg/linux_amd64_dynlink
+
+   # compile
+   rm -rf $builddir/*
+   cd $goroot/src/$pkgpath/$pkgname
+   go install -v -buildmode=plugin -ldflags='-w -s $ldflags'
+   go build -v -buildmode=plugin -ldflags='-w -s $ldflags' -o $builddir/$handler.so
+
+   # collect to directory
+   mkdir $builddir/$handler
+   cp /shim/*.pyc /shim/*.so $builddir/$handler
+END

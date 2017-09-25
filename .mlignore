@@ -1,0 +1,4 @@
+/.git/
+/.dshell_history
+/example/**/build/
+/example/**/cache/

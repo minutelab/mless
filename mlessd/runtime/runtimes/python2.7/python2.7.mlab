@@ -1,0 +1,38 @@
+#!/usr/bin/env mlab
+
+FROM lambci/lambda:python2.7
+
+FLAG name=mless-python27
+FLAG dir
+FLAG debugger "debug to use"
+flag dhost "debugger host"
+flag desktop "path to sources on desktop"
+
+NAME $name
+
+# EXPORT _HANDLER=$handler
+USER root
+
+RUN << END
+  case "$debugger" in
+    pydevd)
+      yum install -y python27-pip
+      pip install pydevd
+      ;;
+    '')
+      ;;
+    *)
+      echo "unsupported debugger: $debugger"
+      exit 10
+  esac
+END
+
+ADD $spath/runtime-mock.py /var/runtime/awslambda/runtime.py
+
+USER sbx_user1051
+
+EXPORT _MLESS_DEBUGGER=$debugger
+EXPORT _MLESS_DEBUG_HOST=$dhost
+EXPORT _MLESS_DESKTOP_SOURCES=$desktop
+
+SHARE /var/task $dir

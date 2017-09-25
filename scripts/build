@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+srcdir=$(dirname $0)
+
+version=$(cat $srcdir/../VERSION)
+
+LDFLAGS="-X main.Version=$version -X main.BuildDate=$(date -u '+%Y-%m-%d_%I:%M:%S')"
+
+CGO_ENABLED=0 go install -v -ldflags "$LDFLAGS" github.com/minutelab/mless/cmd/mless

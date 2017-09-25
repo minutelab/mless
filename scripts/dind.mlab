@@ -1,0 +1,20 @@
+#!/usr/bin/env mlab
+
+FROM docker:$ver
+
+FLAG ver=dind "docker in docker version to use"
+FLAG dockerdb=VOLUME:dockerdb "directory (or volume) containing the docker image db"
+
+OPTION privileged
+
+SHARE /var/lib/docker $dockerdb
+
+SHARE /src $spath/..
+
+WORKDIR src
+
+START << END
+  set -x
+  /usr/local/bin/dockerd-entrypoint.sh dockerd  --storage-driver=aufs &
+  sh
+END

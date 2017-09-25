@@ -1,0 +1,5 @@
+# ddns.sh contain per-user configuration should it should not be comitted
+ddns.sh
+
+.project
+.pydevproject

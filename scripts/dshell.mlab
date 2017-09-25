@@ -1,0 +1,42 @@
+#!/usr/bin/env mlab
+
+FROM golang:1.9
+
+FLAG name=mless "environment name (for multiple distinct copies)"
+FLAG sam="$spath/../example" "sam source directory"
+
+NAME -domain mless
+
+SET history=.dshell_history
+ADD -ifexist $history /root/.bash_history
+OUTPUT /root/.bash_history $history
+
+
+SET    SRC=/go/src/bitbucket.org/minutelab/mless
+EXPORT MLESS_SRC=$sam
+EXPORT MLESS_RUNTIME=${SRC}/mlessd/runtime/runtimes
+EXPORT MLESS_DESKTOP=$parentip
+
+SHARE /go/pkg VOLUME:${name}_cache/pkg
+SHARE ${SRC} .
+SHARE /sam $sam
+
+
+WORKDIR ${SRC}
+
+
+EXPOSE -both 8000 8000
+BACKCONN 5678
+
+# force subcontainer conntetion to route through this one to benefit from the BACKCONN
+NETDEF 192.168.200.0/24 -default
+
+START << END
+  if [ -e scripts/ddns.sh ]
+  then
+    echo "registering DNS"
+    bash scripts/ddns.sh
+    echo
+  fi
+  bash
+END

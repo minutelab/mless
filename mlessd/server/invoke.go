@@ -79,7 +79,9 @@ func prepareEnv(env map[string]string, fn *formation.Function) {
 	}
 
 	// now let's merge environment defined in the formation
-	for k, v := range fn.Environment.Variables {
-		env[k] = v
+	if fn.Environment != nil {
+		for k, v := range fn.Environment.Variables {
+			env[k] = v
+		}
 	}
 }

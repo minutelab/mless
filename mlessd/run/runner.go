@@ -66,7 +66,7 @@ func newRunner(f formation.Function, env map[string]string) (*jproc.Processes, e
 		return nil, fmt.Errorf("no runtime for %s", f.Runtime)
 	}
 
-	cmdline, err := rtime.CmdLine(f, int(id))
+	cmdline, err := rtime.CmdLine(f, env, int(id))
 	if err != nil {
 		return nil, err
 	}

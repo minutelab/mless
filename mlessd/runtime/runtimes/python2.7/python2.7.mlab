@@ -7,6 +7,7 @@ FLAG dir
 FLAG debugger "debug to use"
 flag dhost "debugger host"
 flag desktop "path to sources on desktop"
+flag envfile "file containing environemnt defentitions"
 
 NAME $name
 
@@ -29,6 +30,10 @@ END
 
 ADD $spath/runtime-mock.py /var/runtime/awslambda/runtime.py
 
+
+ADD $envfile /tmp/env
+RUN chown sbx_user1051 /tmp/env
+
 USER sbx_user1051
 
 EXPORT _MLESS_DEBUGGER=$debugger
@@ -36,3 +41,12 @@ EXPORT _MLESS_DEBUG_HOST=$dhost
 EXPORT _MLESS_DESKTOP_SOURCES=$desktop
 
 SHARE /var/task $dir
+
+START << END
+  if [ -e /tmp/env ]
+  then
+    . /tmp/env
+    rm /tmp/env
+  fi
+  /usr/bin/python2.7 /var/runtime/awslambda/bootstrap.py
+END

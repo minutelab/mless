@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path"
 	"strings"
 
@@ -28,7 +29,7 @@ func Init(dir, ip string) {
 // Type represent the type of of the runtime (pythos2.7, etc.)
 type Type interface {
 	// CmdLine create a comamnd line that can start the runner
-	CmdLine(f formation.Function, id int) ([]string, error)
+	CmdLine(f formation.Function, env map[string]string, id int) ([]string, error)
 }
 
 var runtimes = map[string]Type{
@@ -44,11 +45,26 @@ func Get(tp string) Type {
 
 type python27Facotoy struct{}
 
-func (f python27Facotoy) CmdLine(fn formation.Function, id int) ([]string, error) {
+func (f python27Facotoy) CmdLine(fn formation.Function, env map[string]string, id int) ([]string, error) {
+	// When the python process load "C" extention module (for example go programs)
+	// It seem that the setting to the environment in the process does not pass to them
+	// So instead of relying on the environment transmitted to the runtime process
+	// we store it in a file in the container and read it BEFORE the process start
+	// TODO: we need to clean this file once the container start
+	envfile, err := ioutil.TempFile("", fmt.Sprintf("env-%d.", id))
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range env {
+		fmt.Fprintf(envfile, "export %s=%s\n", k, v)
+	}
+	envfile.Close()
+
 	cmdline := []string{
 		path.Join(baseDir, "python2.7/python2.7.mlab"),
 		"-name", fmt.Sprintf("%s-%d", fn.FunctionName, id),
 		"-dir", fn.Code(),
+		"-envfile", envfile.Name(),
 	}
 
 	switch strings.ToLower(fn.Mless.Debugger) {

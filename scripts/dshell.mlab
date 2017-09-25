@@ -12,7 +12,7 @@ ADD -ifexist $history /root/.bash_history
 OUTPUT /root/.bash_history $history
 
 
-SET    SRC=/go/src/bitbucket.org/minutelab/mless
+SET    SRC=/go/src/github.com/minutelab/mless
 EXPORT MLESS_SRC=$sam
 EXPORT MLESS_RUNTIME=${SRC}/mlessd/runtime/runtimes
 EXPORT MLESS_DESKTOP=$parentip

@@ -1,3 +1,5 @@
+# Copyright (C) 2017 MinLab Ltd.
+
 from __future__ import print_function
 
 import json
@@ -11,25 +13,31 @@ def simplify(obj):
         return obj
     return {key: simplify(getattr(obj, key)) for key in keys}
 
-def proxy(event, context, funcName=None):
-    handler = os.environ.get("MLESS_HANDLER")
-    if handler == None:
-        raise Exception("No handler defined")
+def proxy(event, context, server=None, funcName=None):
+    server = server or os.environ.get("MLESS_SERVER")
+    if server == None:
+        raise Exception("No server defined")
 
-    ctx = simplify(context)
+    funcName = funcName or os.environ.get("MLESS_FUNCNAME")
+
+    env = dict(os.environ.items())
     if funcName != None:
-        ctx['function_name'] = funcName
+        env["AWS_LAMBDA_FUNCTION_NAME"] = funcName
 
     req = {
        "event": event,
-       "context": ctx,
+       "context": simplify(context),
        "remaining": context.get_remaining_time_in_millis(),
-       "env": dict(os.environ.items())
+       "env": env
     }
 
-    print("sending request to " + handler)
-    print("request is "+ json.dumps(req))
-    f = urllib2.urlopen(urllib2.Request(handler+"/invoke", json.dumps(req), {'Content-Type': 'application/json'}))
+    print("sending request to " + server)
+    try:
+        f = urllib2.urlopen(urllib2.Request(server+"/invoke", json.dumps(req), {'Content-Type': 'application/json'}))
+    except urllib2.HTTPError as e:
+        content=e.read()
+        raise StandardError("ServerError: %s: %s" % (e.code, content))
+
     response = f.read()
     f.close()
     print("response:" +response)

@@ -6,14 +6,13 @@ import urllib
 import boto3
 import hashlib
 import proxy
+import re
 
 s3 = boto3.client('s3')
 
 BUF_SIZE=4096
 
 def hash_stream(stream, hfunc):
-    print("hfunc: ",hfunc)
-    print("dir:",dir(hfunc))
     while True:
         data = stream.read(BUF_SIZE)
         if not data:
@@ -28,7 +27,7 @@ def hashFile(event, context):
 
     proxyPattern = os.environ.get("PROXY_PATTERN")
     if proxyPattern and re.match(proxyPattern,key):
-        return proxy.proxy(event,context, funcName="lambdaTest")
+        return proxy.proxy(event,context, funcName="hashProxy")
 
     if key.endswith(".md5") or key.endswith(".sha1"):
         print("Nothing to do")

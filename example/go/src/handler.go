@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"strings"
+	"os"
+	"path"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,6 +16,15 @@ import (
 	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
 	"github.com/nfnt/resize"
 )
+
+var outputFolder string
+
+func init() {
+	outputFolder = os.Getenv("OUTPUT_FOLDER")
+	if outputFolder == "" {
+		outputFolder = "files"
+	}
+}
 
 func Handle(evt interface{}, ctx *runtime.Context) (string, error) {
 	// fmt.Fprintln(os.Stderr, "GO Handle called:", ctx.AWSRequestID)
@@ -114,10 +124,5 @@ func attemptDelete(svc *s3.S3, bucket, key string) {
 }
 
 func newName(key string) (string, error) {
-	split := strings.SplitN(key, "/", 2)
-	if len(split) != 2 {
-		return "", fmt.Errorf("bad bucket key: %s", key)
-	}
-
-	return "files/" + split[1], nil
+	return path.Join(outputFolder, path.Base(key)), nil
 }

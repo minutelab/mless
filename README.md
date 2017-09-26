@@ -5,7 +5,7 @@ Mless enables running AWS Lambda functions in a dev-accessible environment, usin
 
 Using Mless you can execute Lambda functions in a lab environment optimized for development purposes, yet run the code in full context of the actual Lambda environment:
 
-With mless the functions are triggered by actual AWS lambda events and triggers such as:
+With mless the functions under test are triggered by actual AWS lambda events and triggers such as:
 
  * Calls from API gateway
  * Any AWS Lambda supported event sources such as

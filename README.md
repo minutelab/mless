@@ -33,6 +33,7 @@ and its configured environment. Yet using the [Minute Lab framework](http://minu
 
 The code is currently in a proof of concept stage. 
 
+
 The following limitations should be expected:
  * Only python 2.7 serverless environment is supported
  * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs.
@@ -50,6 +51,7 @@ Mless combines several technologies
    * It can be the whole lambda function. A such it transfers all triggered events to the lab environment
    * It can be used as library inside the real lambda function. This enables transfering only part of the events to the lab environment
 * The current Mless example utilizes the [Minute Lab](http://minutelab.io) technology to provide a lab environment optimized for development purposes, inculding the look & feel of a local lab environment for code that runs in the cloud as well as interactive troubleshooting, monitoring and automatic code deployment.
+
 
 ## MLess vs SAM Local
 
@@ -76,6 +78,7 @@ Therefore it does not allow to test the side effects of container reuses (an inh
 
 ### The demo Environment Overview
 
+
 The environment includes the following components 
 * An S3 bucket that will trigger the Lambda code into action
 * Mless proxy Lambda function: rediects triggers and events to a Minute Lab server, in which the Lambda code runs
@@ -87,6 +90,7 @@ The environment includes the following components
 
 To best demonstrate the value of mless in the devlopment process, the current mless setup relies on a [MinuteLab](http://minutelab.io) lab environment. You will have to register and install the client to activate your private lab environment.
 The [Quick Start Guide](http://docs.minutelab.io/user-guide/quickstart/) is a good starting point. Follow this guide to learn how to setup a Minute Lab domain, a host and a file share between your desktop and your host.
+
 
 **Note:** For the purpose of mless you will need to set up a self-hosted Minute Lab domain (all explained in the quickstart guide) to allow settings of security groups for inbound access from Lambda into your lab environment.
 
@@ -100,6 +104,7 @@ You will have to setup the security group in the EC2 console. You can attach it 
 
 To access the container where the tested code runs, the proxy code would have to know its IP. The easiest way is by using a dynamic DNS service. You can use any service you like, but the mless code contains script templates to use [DYNU](https://www.dynu.com).
 
+
 Register to such a service to obtain a DNS name (and credentials that allow you to register to it)
 
 ### Setting up the examples
@@ -111,6 +116,7 @@ The example directory contains:
 * `mless.mlab` script - this script will start the mless container in Minute Lab
 * `ddns.dynu.sh` - this is a template for a script that will register to [dynu](https://www.dynu.com) dynamic DNS service. If this is what you are using copy it to `ddns.sh` and edit it to put your credentials and host name.
   As `mless.mlab` starts it executes this script to register the updated IP.
+
   If you are using another service you can put another script there.
 
 #### First example
@@ -139,11 +145,13 @@ What happened:
 * Writing the hash to the S3 bucket triggered the process again. AWS Lambda called the proxy
   which called mlessd which executed the function.
 * This time the code determined (by the filename extension) that it doesn't need to write the hash,
+
   and broke the loop.
 
 #### Modifying the example
 
 Open your favorite IDE and edit your serverless code. To do that open the file `example/hash/lambda_function.py`(stored locally on your desktop) and cahnge it.
+
 For example change the hashed file extension to be `.hash` 
 This is done by changing the line:
 
@@ -158,11 +166,13 @@ newkey = key+".hash"
 ```
 
 Save the file you just edited (locally). It will be uploaded to the running Minute Lab container automatically. 
+
 Now upload another file to S3 (no need to stop/start mlessd).
 You will notice that the NEW code is used:
 
 * The files are created with the `.hash` extension
 * The code fails to activate the "loop protection" (as the extention name was changed...), which results with `.hash.hash`, `.hash.hash.hash`, etc extensions (the "loop" will continue until the S3 file name length limit is reached)
+
 
 #### Running with a debugger
 

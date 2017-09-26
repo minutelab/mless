@@ -29,13 +29,13 @@ and its configured environment. Yet using the [Minute Lab framework](http://minu
  Though handling the code will look and feel as it runs locally, it will actually run in AWS, 
  which grants it access to resources in the private VPC.
 
-## Development stage
+## Proof Of Concept
 
 The code is currently in a proof of concept stage. 
 
 The following limitations should be expected:
  * Only python 2.7 serverless environment is supported
- * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs (less of an issue inside a VPC)
+ * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs.
  
 On the other hand - 
  * Expect frequent updates and added features

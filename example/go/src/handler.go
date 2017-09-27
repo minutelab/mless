@@ -8,6 +8,7 @@ import (
 	"image/jpeg"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -68,16 +69,16 @@ func Handle(evt interface{}, ctx *runtime.Context) (string, error) {
 	}
 	fmt.Printf("Image %s - %s\n", format, img.Bounds().String())
 
-	if img.Bounds().Dx() <= 1000 && img.Bounds().Dy() <= 1000 {
+	if img.Bounds().Dx() <= 300 && img.Bounds().Dy() <= 300 {
 		fmt.Println("does not need resizing")
 		return "Moved", move(svc, bucket, key, nkey)
 	}
 
 	var resized image.Image
 	if img.Bounds().Dx() > img.Bounds().Dy() {
-		resized = resize.Resize(1000, 0, img, resize.Bilinear)
+		resized = resize.Resize(300, 0, img, resize.Bilinear)
 	} else {
-		resized = resize.Resize(0, 1000, img, resize.Bilinear)
+		resized = resize.Resize(0, 300, img, resize.Bilinear)
 	}
 
 	var buf bytes.Buffer
@@ -85,6 +86,11 @@ func Handle(evt interface{}, ctx *runtime.Context) (string, error) {
 		return "", err
 	}
 	fmt.Println("Encoded, len:", buf.Len())
+
+	// We encoded it as jpeg, lets make sure that the name fit
+	if ext := filepath.Ext(nkey); ext != "jpeg" && ext != "jpg" {
+		nkey = nkey + ".jpg"
+	}
 
 	uploader := s3manager.NewUploader(sess)
 	_, err = uploader.Upload(&s3manager.UploadInput{

@@ -9,9 +9,9 @@ import (
 	"sync"
 )
 
-// Processes represents a process that get requests as json objects streamed
+// Process represents a process that get requests as json objects streamed
 // to stdin (separated by a new line), and for each request, in order it send a reply to stdout
-type Processes struct {
+type Process struct {
 	cmd  *exec.Cmd
 	done <-chan struct{} // the done channel is closed when the process dies
 	err  error           // err return the error from the process
@@ -23,8 +23,8 @@ type Processes struct {
 }
 
 // Start an new process based on the command line
-func Start(cmd *exec.Cmd) (*Processes, error) {
-	j := &Processes{cmd: cmd}
+func Start(cmd *exec.Cmd) (*Process, error) {
+	j := &Process{cmd: cmd}
 
 	if err := j.start(); err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func Start(cmd *exec.Cmd) (*Processes, error) {
 
 // StartWithStderr an new process based on the command line
 // and register a callback to be called for each line of stderr
-func StartWithStderr(cmd *exec.Cmd, stderr func(string)) (*Processes, error) {
+func StartWithStderr(cmd *exec.Cmd, stderr func(string)) (*Process, error) {
 	stderrCloser, err := StdErrCallback(cmd, stderr)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func StartWithStderr(cmd *exec.Cmd, stderr func(string)) (*Processes, error) {
 }
 
 // Close the process (killing it if it not already dead and stopping waiting goroutines)
-func (j *Processes) Close() error {
+func (j *Process) Close() error {
 	if j == nil || j.cmd.Process == nil {
 		return errors.New("not running")
 	}
@@ -60,7 +60,7 @@ func (j *Processes) Close() error {
 }
 
 // Send a request and decode back the reply to reply
-func (j *Processes) Send(request, reply interface{}) error {
+func (j *Process) Send(request, reply interface{}) error {
 	j.lock.Lock()
 	defer j.lock.Unlock()
 
@@ -72,7 +72,7 @@ func (j *Processes) Send(request, reply interface{}) error {
 }
 
 // IsRunning return true if the process can get data
-func (j *Processes) IsRunning() bool {
+func (j *Process) IsRunning() bool {
 	if j == nil || j.done == nil {
 		return false
 	}
@@ -86,13 +86,13 @@ func (j *Processes) IsRunning() bool {
 
 // Done return a channel is get closed when the process dies
 // Note: If the process never started it return nil
-func (j *Processes) Done() <-chan struct{} { return j.done }
+func (j *Process) Done() <-chan struct{} { return j.done }
 
 // Error return the final error code of the process (or nil if doesn't have one)
-func (j *Processes) Error() error { return j.err }
+func (j *Process) Error() error { return j.err }
 
 // Start the process
-func (j *Processes) start() error {
+func (j *Process) start() error {
 	r, err := j.cmd.StdoutPipe()
 	if err != nil {
 		return err

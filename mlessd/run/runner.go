@@ -30,7 +30,7 @@ type RuntimeError struct {
 func (r RuntimeError) Error() string { return r.Value }
 
 type runner struct {
-	proc *jproc.Processes
+	proc *jproc.Process
 	hash []byte
 }
 
@@ -56,7 +56,7 @@ func (r *runner) Invoke(event interface{}, context lambda.Context, deadline time
 	return reply.Result, nil
 }
 
-func newRunner(f formation.Function, env map[string]string) (*jproc.Processes, error) {
+func newRunner(f formation.Function, env map[string]string) (*jproc.Process, error) {
 	id := atomic.AddUint32(&rid, 1)
 	logger := log15.New("rid", id)
 	logger.Info("Starting runner", "function", f.FunctionName)

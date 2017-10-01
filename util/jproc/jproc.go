@@ -117,7 +117,15 @@ func (j *Process) start() error {
 	j.encoder = json.NewEncoder(w)
 
 	go func() {
-		_, j.err = j.cmd.Process.Wait()
+		state, err := j.cmd.Process.Wait()
+		switch {
+		case err != nil:
+			j.err = err
+		case !state.Success():
+			j.err = errors.New(state.String())
+		default:
+			j.err = nil
+		}
 		close(c)
 	}()
 	return nil

@@ -8,6 +8,7 @@ import (
 	"github.com/inconshreveable/log15"
 
 	"github.com/minutelab/mless/formation"
+	"github.com/minutelab/mless/lambda"
 	"github.com/minutelab/mless/util/envstr"
 )
 
@@ -30,7 +31,7 @@ type runnerKey struct {
 // same environment and and same code.
 //
 // If a sutiable one is not found a new one is returned
-func Get(fn formation.Function, env map[string]string) (Invoker, error) {
+func Get(fn formation.Function, env map[string]string) (lambda.Invoker, error) {
 	key := runnerKey{
 		name:    fn.FunctionName,
 		runtime: fn.Runtime,
@@ -46,12 +47,12 @@ func Get(fn formation.Function, env map[string]string) (Invoker, error) {
 
 	if val, ok := runners.Load(key); ok {
 		old := val.(*runner)
-		if old.proc.IsRunning() {
+		if old.IsRunning() {
 			if bytes.Equal(old.hash, hash) {
 				return old, nil
 			}
 			log15.Info("hash is different, need another runner")
-			old.proc.Close()
+			old.Close()
 		}
 	}
 
@@ -59,7 +60,7 @@ func Get(fn formation.Function, env map[string]string) (Invoker, error) {
 	if err != nil {
 		return nil, err
 	}
-	newRunner := &runner{proc: rnr, hash: hash}
+	newRunner := &runner{Container: rnr, hash: hash}
 	runners.Store(key, newRunner)
 	return newRunner, nil
 }

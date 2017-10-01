@@ -6,13 +6,12 @@ package runtime
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
-	"path"
-	"strings"
 
 	"github.com/inconshreveable/log15"
-
 	"github.com/minutelab/mless/formation"
+	"github.com/minutelab/mless/lambda"
 )
 
 var (
@@ -26,60 +25,55 @@ func Init(dir, ip string) {
 	desktopIP = ip
 }
 
-// Type represent the type of of the runtime (pythos2.7, etc.)
-type Type interface {
-	// CmdLine create a comamnd line that can start the runner
-	CmdLine(f formation.Function, env map[string]string, id int) ([]string, error)
+// Container is a specific runtime container
+type Container interface {
+	lambda.Invoker
+	// Closes (stop) the container
+	Close() error
+	// A channel that is closed when the container exit
+	Done() <-chan struct{}
+	// Err is valid only after the container exit (the Done channel is closed)
+	// And contain the exit error of the container
+	Err() error
 }
 
-var runtimes = map[string]Type{
-	"python2.7": pythonFacotoy("2.7"),
-	"python3.6": pythonFacotoy("3.6"),
+// New create a new runner
+func New(fn formation.Function, settings lambda.StartupRequest, logger log15.Logger, id string) (Container, error) {
+	switch fn.Runtime {
+	case "python2.7":
+		return newPython("2.7", fn, settings, logger, id)
+	case "python3.6":
+		return newPython("3.6", fn, settings, logger, id)
+	}
+	return nil, fmt.Errorf("no such runtime: %s", fn.Runtime)
 }
 
-// Get a runtime Type according to name
-// or nil if it does not exist
-func Get(tp string) Type {
-	rt, _ := runtimes[tp]
-	return rt
-}
-
-type pythonFacotoy string
-
-func (f pythonFacotoy) CmdLine(fn formation.Function, env map[string]string, id int) ([]string, error) {
-	// When the python process load "C" extention module (for example go programs)
-	// It seem that the setting to the environment in the process does not pass to them
-	// So instead of relying on the environment transmitted to the runtime process
-	// we store it in a file in the container and read it BEFORE the process start
-	// TODO: we need to clean this file once the container start
-	envfile, err := ioutil.TempFile("", fmt.Sprintf("env-%d.", id))
+func writeEnvFile(settings lambda.StartupRequest, id string) (string, error) {
+	envfile, err := ioutil.TempFile("", fmt.Sprintf("env-%s.", id))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	for k, v := range env {
-		fmt.Fprintf(envfile, "export %s=%s\n", k, v)
+	defer envfile.Close()
+	for k, v := range settings.Env {
+		if err := printEnvItem(envfile, k, v); err != nil {
+			return "", err
+		}
 	}
-	envfile.Close()
-
-	cmdline := []string{
-		path.Join(baseDir, "python/python.mlab"),
-		"-ver", string(f),
-		"-name", fmt.Sprintf("%s-%d", fn.FunctionName, id),
-		"-dir", fn.Code(),
-		"-envfile", envfile.Name(),
+	if err := printEnvItem(envfile, "_HANDLER", settings.Handler); err != nil {
+		return "", err
 	}
-
-	switch strings.ToLower(fn.Mless.Debugger) {
-	case "pydevd":
-		cmdline = append(cmdline,
-			"-debugger", "pydevd",
-			"-dhost", desktopIP,
-			"-desktop", fn.Desktop(),
-		)
-	case "":
-		// nothing
-	default:
-		log15.Warn("Unknown python 2.7 debugger", "func", fn.FunctionName, "debugger", fn.Mless.Debugger)
-	}
-	return cmdline, nil
+	return envfile.Name(), nil
 }
+
+func printEnvItem(o io.Writer, k, v string) error {
+	_, err := fmt.Fprintf(o, "export %s=%s\n", k, v)
+	return err
+}
+
+// RuntimeError is the type of error returned by the lambda runtime
+type RuntimeError struct {
+	Type  string
+	Value string
+}
+
+func (r RuntimeError) Error() string { return r.Value }

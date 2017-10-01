@@ -3,7 +3,16 @@
 // It include structures that are passed between the proxy and mlessd, and between mlessd and the runtime containers.
 package lambda
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
+
+// Invoker is the interface for a container running lambda function
+// The Invoker is responsbile for serialization of the requests.
+type Invoker interface {
+	Invoke(event interface{}, context Context, deadline time.Time) (json.RawMessage, error)
+}
 
 // ProxyRequest is the request sent from the proxy to mlabd
 type ProxyRequest struct {

@@ -1,17 +1,17 @@
 #!/usr/bin/env mlab
 
-FROM lambci/lambda:python2.7
+FROM lambci/lambda:python${ver}
 
-FLAG name=mless-python27
+FLAG ver=3.6 "python version 2.7/3.6"
+FLAG name=mless-python
 FLAG dir
-FLAG debugger "debug to use"
+FLAG debugger "debugger to use"
 flag dhost "debugger host"
 flag desktop "path to sources on desktop"
 flag envfile "file containing environemnt defentitions"
 
 NAME $name
 
-# EXPORT _HANDLER=$handler
 USER root
 
 RUN << END
@@ -48,5 +48,10 @@ START << END
     . /tmp/env
     rm /tmp/env
   fi
-  /usr/bin/python2.7 /var/runtime/awslambda/bootstrap.py
+  if [ $ver = 2.7 ]
+  then
+    exec /usr/bin/python2.7      /var/runtime/awslambda/bootstrap.py
+  else
+    exec /var/lang/bin/python3.6 /var/runtime/awslambda/bootstrap.py
+  fi
 END

@@ -35,7 +35,7 @@ The code is currently in a proof of concept stage.
 
 
 The following limitations should be expected:
- * Only python 2.7 serverless environment is supported
+ * Only python serverless environment is supported (both python 2.7 and python 3.6)
  * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs.
  
 On the other hand - 
@@ -123,8 +123,15 @@ The example directory contains:
 
 Create a Lambda function to hold the first proxy:
 
-* Select python 2.7 as the environment 
+* Select either python 2.7 or python 3.6 as the environment
+* Copy the `procy/python<ver>/python.py` as the function content
 * Set in the environment `MLESS_SERVER` to be `http://<your servername>:8000`
+* Make the function call the appropriate local function
+  * The examples contain two function that does the same in different run time encironment
+    * python2.7 - `hashFile`
+    * python3.6 - `hash36`
+  * By default the proxy call a function with the same name as its own name.
+  * The default can be over ridden by configuring the environment variable `MLESS_FUNCNAME`.
 * Configure a trigger on creating an object in a S3 bucket of your choice
   (it is advised to limit this to a specific folder only).
 * Make sure to configure the Lambda function with a role that allows it to read/write from/to this bucket.

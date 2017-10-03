@@ -33,7 +33,8 @@ type Type interface {
 }
 
 var runtimes = map[string]Type{
-	"python2.7": python27Facotoy{},
+	"python2.7": pythonFacotoy("2.7"),
+	"python3.6": pythonFacotoy("3.6"),
 }
 
 // Get a runtime Type according to name
@@ -43,9 +44,9 @@ func Get(tp string) Type {
 	return rt
 }
 
-type python27Facotoy struct{}
+type pythonFacotoy string
 
-func (f python27Facotoy) CmdLine(fn formation.Function, env map[string]string, id int) ([]string, error) {
+func (f pythonFacotoy) CmdLine(fn formation.Function, env map[string]string, id int) ([]string, error) {
 	// When the python process load "C" extention module (for example go programs)
 	// It seem that the setting to the environment in the process does not pass to them
 	// So instead of relying on the environment transmitted to the runtime process
@@ -61,7 +62,8 @@ func (f python27Facotoy) CmdLine(fn formation.Function, env map[string]string, i
 	envfile.Close()
 
 	cmdline := []string{
-		path.Join(baseDir, "python2.7/python2.7.mlab"),
+		path.Join(baseDir, "python/python.mlab"),
+		"-ver", string(f),
 		"-name", fmt.Sprintf("%s-%d", fn.FunctionName, id),
 		"-dir", fn.Code(),
 		"-envfile", envfile.Name(),

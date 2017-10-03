@@ -59,7 +59,7 @@ func (r *runner) Invoke(event interface{}, context lambda.Context, deadline time
 func newRunner(f formation.Function, env map[string]string) (*jproc.Process, error) {
 	id := atomic.AddUint32(&rid, 1)
 	logger := log15.New("rid", id)
-	logger.Info("Starting runner", "function", f.FunctionName)
+	logger.Info("Starting runner", "function", f.FunctionName, "runtime", f.Runtime)
 
 	rtime := runtime.Get(f.Runtime)
 	if rtime == nil {

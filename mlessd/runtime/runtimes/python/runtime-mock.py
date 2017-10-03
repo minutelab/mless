@@ -45,11 +45,11 @@ def jsonStreamReader(f):
                 ex = None
             except ValueError as e:
                 if ex and ex.message == e.message:
-                    raise ValueError, "%s while decoding '%s'" % (e,data)
+                    raise ValueError("%s while decoding '%s'" % (e,data))
                 ex = e
                 break
     if ex:
-        raise ValueError, "%s while decoding '%s'" % (ex,data)
+        raise ValueError("%s while decoding '%s'" % (ex,data))
 
 
 _GLOBAL_MEM_SIZE = os.environ.get('AWS_LAMBDA_FUNCTION_MEMORY_SIZE', '1536') # TODO
@@ -81,7 +81,7 @@ def receive_start():
     sys.stderr = orig_stderr
 
     eprint("recieved start called")
-    msg=_GLOBAL_MESSAGE_READER.next()
+    msg=next(_GLOBAL_MESSAGE_READER)
     eprint("start message:", msg)
 
     handler = msg["handler"]
@@ -126,7 +126,7 @@ def report_running(invokeid):
 def receive_invoke():
     eprint("receive_invoke:")
 
-    msg=_GLOBAL_MESSAGE_READER.next()
+    msg=next(_GLOBAL_MESSAGE_READER)
 
     global _GLOBAL_INVOKED
     global _GLOBAL_START_TIME

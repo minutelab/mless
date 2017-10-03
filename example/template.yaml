@@ -17,6 +17,18 @@ Resources:
       Mless:
 #          Debugger: pydevd
 
+  hash36:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: lambda_function.hashFile
+      CodeUri: hash36
+      Environment:
+        Variables:
+            ENV_TEST: Test
+      Mless:
+#          Debugger: pydevd
+
   picHandler:
     Type: AWS::Serverless::Function
     Properties:

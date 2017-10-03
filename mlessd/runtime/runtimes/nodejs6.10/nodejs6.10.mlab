@@ -1,0 +1,34 @@
+#!/usr/bin/env mlab
+
+FROM lambci/lambda:nodejs6.10
+
+FLAG name=mless-nodejs610
+FLAG dir
+flag envfile "file containing environemnt defentitions"
+
+NAME $name
+
+USER root
+
+ADD $spath/awslambda-mock.js /var/runtime/node_modules/awslambda/build/Release/awslambda.js
+
+ADD $envfile /tmp/env
+RUN chown sbx_user1051 /tmp/env
+
+USER sbx_user1051
+
+SHARE /var/task $dir
+
+START << END
+  if [ -e /tmp/env ]
+  then
+    . /tmp/env
+    rm /tmp/env
+  fi
+
+   /var/lang/bin/node --max-old-space-size=1228 \
+                          --max-semi-space-size=77  \
+                          --max-executable-size=154 \
+                          --expose-gc               \
+                          /var/runtime/node_modules/awslambda/index.js
+END

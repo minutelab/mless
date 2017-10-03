@@ -34,14 +34,7 @@ func (s *stdiocont) Invoke(event interface{}, context lambda.Context, deadline t
 		return nil, err
 	}
 
-	if reply.InvokeID != context.RequestID {
-		return nil, fmt.Errorf("response ID %s does not match request: %s", reply.InvokeID, context.RequestID)
-	}
-
-	if reply.Errors {
-		return nil, RuntimeError{Type: reply.ErrorType, Value: string(reply.Result)}
-	}
-	return reply.Result, nil
+	return processReply(reply, context.RequestID)
 }
 
 func newStdiocont(cmdline []string, settings lambda.StartupRequest, name string, id string) (Container, error) {

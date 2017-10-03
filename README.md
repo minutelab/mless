@@ -1,7 +1,7 @@
 Mless - run serverless functions locally in real-life context
 =============================================================
 
-Mless enables running AWS Lambda functions in a dev-accessible environment, using the full context (events and triggers) available in the Lambda framework. It is designed to greatly improve the development and testing process of serverless functions. 
+Mless enables running AWS Lambda functions in a dev-accessible environment, using the full context (events and triggers) available in the Lambda framework. It is designed to greatly improve the development and testing process of serverless functions.
 
 Using Mless you can execute Lambda functions in a lab environment optimized for development purposes, yet run the code in full context of the actual Lambda environment:
 
@@ -14,9 +14,9 @@ With mless the functions under test are triggered by actual AWS lambda events an
 
 This allows a full simulation of an application flow involving serverless functions, while allowing developers to have full access to the serverless code they work on.
 
-The solution involves a small serverless proxy inside AWS lambda. 
-It enables redirection of events and triggers into an accessible lab environment where the code can be developed more easily and efficiently. 
-Once the Lambda function concludes it's processing, the flow of the application it is part of, continues as if the code runs in Lambda. 
+The solution involves a small serverless proxy inside AWS lambda.
+It enables redirection of events and triggers into an accessible lab environment where the code can be developed more easily and efficiently.
+Once the Lambda function concludes it's processing, the flow of the application it is part of, continues as if the code runs in Lambda.
 A single test flow may include multiple simulated Lambda functions.
 
 Running the function will use the role configured for the lambda function,
@@ -26,19 +26,25 @@ and its configured environment. Yet using the [Minute Lab framework](http://minu
    * For scripted languages (python, node) you can simply save the code in the IDE which will trigger the auto-deployment of the code
  * Enabling debugging of the serverless code using your local IDE
 
- Though handling the code will look and feel as if it runs locally, it will actually run in AWS, 
+ Though handling the code will look and feel as if it runs locally, it will actually run in AWS,
  which grants it access to resources in the private VPC.
 
 ## Proof Of Concept
 
-The code is currently in a proof of concept stage. 
+The code is currently in a proof of concept stage.
 
 
 The following limitations should be expected:
+ * Limited environment support
+    * python - both 2.7 and 3.6 are supported
+    * nodejs6.10 partially supported
+      * You can proxy to nodeJS lambda functions running locally
+      * Currently we don't have proxy in nodejs, so the proxy must be in python
+      * Remote debugging currently not supported
  * Only python serverless environment is supported (both python 2.7 and python 3.6)
  * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs.
- 
-On the other hand - 
+
+On the other hand -
  * Expect frequent updates and added features
  * We are eager to get feedback
 
@@ -60,9 +66,9 @@ Both projects aim to run lambda function code in a local environment.
 
 In fact mless shares some of the code base with SAM local.
 
-There are several differences though: 
+There are several differences though:
 
-* Simulated VS actual triggers: SAM local runs and triggers the function locally and runs under the local user AWS role. 
+* Simulated VS actual triggers: SAM local runs and triggers the function locally and runs under the local user AWS role.
 To trigger a function locally, SAM local enables you to simulate an event and similar to how it would run in Lambda. For example, SAM local enables you to simulate a trigger originating from a file change in S3.
 
 However SAM local won't allow you to react to real events or view a chain of events. Suppose a Lambda function that is triggered by a change in a S3 bucket and writes something into a Kinesis stream, which will then trigger another Lambda function.
@@ -72,14 +78,14 @@ SAM local enables you to simulate each of the events independently.
 With mless actual events and triggers are used to activate a Lambda function in test and the entire chain of event will roll out as it would in production.
 
 * Reuse of containers: SAM local runs each function in its own container, it doesn't reuse the same container to run several functions.
-Therefore it does not allow to test the side effects of container reuses (an inherent Lambda framework functionality). Both the positive effects (like preparing cache) and the negative ones are essential for a complete test scenario. 
+Therefore it does not allow to test the side effects of container reuses (an inherent Lambda framework functionality). Both the positive effects (like preparing cache) and the negative ones are essential for a complete test scenario.
 
 ## Usage
 
 ### The demo Environment Overview
 
 
-The environment includes the following components 
+The environment includes the following components
 * An S3 bucket that will trigger the Lambda code into action
 * Mless proxy Lambda function: rediects triggers and events to a Minute Lab server, in which the Lambda code runs
 * A minute Lab environment to run the Lambda code in. This is an mless container running inside a Minute Lab host, running in AWS.
@@ -159,7 +165,7 @@ What happened:
 
 Open your favorite IDE and edit your serverless code. To do that open the file `example/hash/lambda_function.py`(stored locally on your desktop) and cahnge it.
 
-For example change the hashed file extension to be `.hash` 
+For example change the hashed file extension to be `.hash`
 This is done by changing the line:
 
 ```python
@@ -172,7 +178,7 @@ to:
 newkey = key+".hash"
 ```
 
-Save the file you just edited (locally). It will be uploaded to the running Minute Lab container automatically. 
+Save the file you just edited (locally). It will be uploaded to the running Minute Lab container automatically.
 
 Now upload another file to S3 (no need to stop/start mlessd).
 You will notice that the NEW code is used:

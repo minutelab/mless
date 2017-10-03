@@ -5,6 +5,7 @@
 package runtime
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,7 +45,10 @@ func New(fn formation.Function, settings lambda.StartupRequest, logger log15.Log
 		return newPython("2.7", fn, settings, logger, id)
 	case "python3.6":
 		return newPython("3.6", fn, settings, logger, id)
+	case "nodejs6.10":
+		return newNode610(fn, settings, logger, id)
 	}
+
 	return nil, fmt.Errorf("no such runtime: %s", fn.Runtime)
 }
 
@@ -70,10 +74,21 @@ func printEnvItem(o io.Writer, k, v string) error {
 	return err
 }
 
-// RuntimeError is the type of error returned by the lambda runtime
-type RuntimeError struct {
+// runtimeError is the type of error returned by the lambda runtime
+type runtimeError struct {
 	Type  string
 	Value string
 }
 
-func (r RuntimeError) Error() string { return r.Value }
+func (r runtimeError) Error() string { return r.Value }
+
+func processReply(reply lambda.InvokeReply, requestID string) (json.RawMessage, error) {
+	if reply.InvokeID != requestID {
+		return nil, fmt.Errorf("response ID %s does not match request: %s", reply.InvokeID, requestID)
+	}
+
+	if reply.Errors {
+		return nil, runtimeError{Type: reply.ErrorType, Value: string(reply.Result)}
+	}
+	return reply.Result, nil
+}

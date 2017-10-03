@@ -35,6 +35,7 @@ Resources:
       Runtime: python2.7
       Handler: handler.Handle
       CodeUri: go/build
+
   hashProxy:
     Type: AWS::Serverless::Function
     Properties:
@@ -44,3 +45,14 @@ Resources:
       Environment:
         Variables:
             PROXY_PATTERN:
+
+  hashnode:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: index.handler
+      CodeUri: node
+      Environment:
+        Variables:
+            ENV_TEST: Test
+      Mless:

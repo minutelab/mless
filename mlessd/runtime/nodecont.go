@@ -7,12 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
 	"sync"
 	"time"
-
-	"github.com/inconshreveable/log15"
 
 	"github.com/minutelab/mless/lambda"
 	"github.com/minutelab/mless/util/jproc"
@@ -22,9 +19,8 @@ import (
 // It send request over http and recieve them over stdout...
 type nodecont struct {
 	cmd     *exec.Cmd
-	logger  log15.Logger
-	name    string
-	port    int
+	logger  Logger
+	url     string
 	decoder *json.Decoder
 	done    <-chan struct{}
 	err     error
@@ -44,10 +40,10 @@ var (
 	}
 )
 
-func newNodeCont(cmdline []string, settings lambda.StartupRequest, name string, logger log15.Logger, id string) (Container, error) {
+func newNodeCont(cmdline []string, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
 	cmd := exec.Command(cmdline[0], cmdline[1:]...)
 
-	stderrCloser, err := jproc.StdErrCallback(cmd, func(s string) { fmt.Fprintf(os.Stderr, "rid-%s: %s\n", id, s) })
+	stderrCloser, err := jproc.StdErrCallback(cmd, logger.StdErr)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +58,7 @@ func newNodeCont(cmdline []string, settings lambda.StartupRequest, name string, 
 		return nil, err
 	}
 
-	logger.Debug("Started container waiting for ack")
+	logger.ContainerEvent("Started container waiting for ack", nil)
 	decoder := json.NewDecoder(stdout)
 	// decoder := json.NewDecoder(readerlogger.New(stdout, "stdout", name))
 
@@ -78,8 +74,7 @@ func newNodeCont(cmdline []string, settings lambda.StartupRequest, name string, 
 		cmd:     cmd,
 		logger:  logger,
 		decoder: decoder,
-		name:    name,
-		port:    8999, // XXX
+		url:     fmt.Sprintf("http://%s:%d/", name, 8999),
 	}
 
 	cont.done = cont.waiter()
@@ -133,7 +128,7 @@ func (h *nodecont) Invoke(event interface{}, context lambda.Context, deadline ti
 	defer h.lock.Unlock()
 	defer transport.CloseIdleConnections()
 
-	response, err := client.Post(fmt.Sprintf("http://%s:%d/", h.name, h.port), "application/json", bytes.NewReader(reqBuf))
+	response, err := client.Post(h.url, "application/json", bytes.NewReader(reqBuf))
 	if err != nil {
 		return nil, err
 	}
@@ -152,5 +147,5 @@ func (h *nodecont) Invoke(event interface{}, context lambda.Context, deadline ti
 	if err := h.decoder.Decode(&reply); err != nil {
 		return nil, err
 	}
-	return processReply(reply, context.RequestID)
+	return processReply(reply, context.RequestID, h.logger)
 }

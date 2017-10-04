@@ -47,13 +47,7 @@ func invokeHandler(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	res, err := runner.Invoke(request.Event, request.Context, deadline)
-	if err != nil {
-		log15.Error("Error reply", "err", err)
-		return nil, err
-	}
-	log15.Info("Replying", "res", string(res))
-	return res, nil // TODO
+	return runner.Invoke(request.Event, request.Context, deadline)
 }
 
 func prepareEnv(env map[string]string, fn *formation.Function) {

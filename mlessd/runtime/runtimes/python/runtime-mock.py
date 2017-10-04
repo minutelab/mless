@@ -180,23 +180,19 @@ def report_done(invokeid, errortype, result):
         billed_duration = min(100 * int((duration / 100) + 1), _GLOBAL_TIMEOUT * 1000)
         max_mem = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024)
 
-        eprint(
-            "REPORT RequestId: %s Duration: %s ms Billed Duration: %s ms Memory Size: %s MB Max Memory Used: %s MB" % (
-                invokeid, duration, billed_duration, _GLOBAL_MEM_SIZE, max_mem
-            )
-        )
-        # if result:
-        #     print('\n' + result, file=orig_stdout)
-        # sys.exit(1 if _GLOBAL_ERRORED else 0)
         res = {
             "result":    result,
             "errortype": errortype,
             "invokeid":  invokeid,         # TODO needed?
             "errors":    _GLOBAL_ERRORED,
+            "billing": {
+                "duration": duration,
+                "memory": _GLOBAL_MEM_SIZE,
+                "used": max_mem,
+            }
         }
         print(json.dumps(res)+"\n",file=orig_stdout)
         orig_stdout.flush()
-        eprint(json.dumps(res))
         _GLOBAL_ERRORED = False
     else:
         return

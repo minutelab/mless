@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/inconshreveable/log15"
 	"github.com/minutelab/mless/formation"
 	"github.com/minutelab/mless/lambda"
 )
@@ -39,14 +38,14 @@ type Container interface {
 }
 
 // New create a new runner
-func New(fn formation.Function, settings lambda.StartupRequest, logger log15.Logger, id string) (Container, error) {
+func New(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
 	switch fn.Runtime {
 	case "python2.7":
-		return newPython("2.7", fn, settings, logger, id)
+		return newPython("2.7", fn, settings, name, logger)
 	case "python3.6":
-		return newPython("3.6", fn, settings, logger, id)
+		return newPython("3.6", fn, settings, name, logger)
 	case "nodejs6.10":
-		return newNode610(fn, settings, logger, id)
+		return newNode610(fn, settings, name, logger)
 	}
 
 	return nil, fmt.Errorf("no such runtime: %s", fn.Runtime)
@@ -82,10 +81,14 @@ type runtimeError struct {
 
 func (r runtimeError) Error() string { return r.Value }
 
-func processReply(reply lambda.InvokeReply, requestID string) (json.RawMessage, error) {
+func processReply(reply lambda.InvokeReply, requestID string, logger Logger) (json.RawMessage, error) {
 	if reply.InvokeID != requestID {
-		return nil, fmt.Errorf("response ID %s does not match request: %s", reply.InvokeID, requestID)
+		err := fmt.Errorf("response ID %s does not match request: %s", reply.InvokeID, requestID)
+		logger.ContainerEvent("mismatched answer", err)
+		return nil, err
 	}
+
+	logger.FunctionResult(&reply)
 
 	if reply.Errors {
 		return nil, runtimeError{Type: reply.ErrorType, Value: string(reply.Result)}

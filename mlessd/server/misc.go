@@ -11,7 +11,7 @@ func jsonHandler(f func(*http.Request) (interface{}, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		res, err := f(r)
 		if err != nil {
-			log15.Error("Returning error", "err", err)
+			// log15.Error("Returning error", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

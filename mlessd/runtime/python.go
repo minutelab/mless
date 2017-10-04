@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -12,26 +11,26 @@ import (
 	"github.com/minutelab/mless/lambda"
 )
 
-func newPython(ver string, fn formation.Function, settings lambda.StartupRequest, logger log15.Logger, id string) (Container, error) {
-	envfile, err := writeEnvFile(settings, id)
+func newPython(ver string, fn formation.Function, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
+	envfile, err := writeEnvFile(settings, name)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(envfile)
 
-	cmdline, err := pythonCmdLine(ver, fn, id, envfile)
+	cmdline, err := pythonCmdLine(ver, fn, name, envfile)
 	if err != nil {
 		return nil, err
 	}
 
-	return newStdiocont(cmdline, settings, fn.FunctionName, id)
+	return newStdiocont(cmdline, settings, logger)
 }
 
-func pythonCmdLine(ver string, fn formation.Function, id string, envfile string) ([]string, error) {
+func pythonCmdLine(ver string, fn formation.Function, name string, envfile string) ([]string, error) {
 	cmdline := []string{
 		path.Join(baseDir, "python/python.mlab"),
 		"-ver", ver,
-		"-name", fmt.Sprintf("%s-%s", fn.FunctionName, id),
+		"-name", name,
 		"-dir", fn.Code(),
 		"-envfile", envfile,
 	}

@@ -1,11 +1,9 @@
 package runtime
 
 import (
-	"fmt"
 	"os"
 	"path"
 
-	"github.com/inconshreveable/log15"
 	"github.com/minutelab/mless/formation"
 	"github.com/minutelab/mless/lambda"
 )
@@ -21,20 +19,19 @@ import (
 //
 // Then when we have a reply we send it on stdout. So we end up with a strangly mixed protocol, but it work
 
-func newNode610(fn formation.Function, settings lambda.StartupRequest, logger log15.Logger, id string) (Container, error) {
-	envfile, err := writeEnvFile(settings, id)
+func newNode610(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
+	envfile, err := writeEnvFile(settings, name)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(envfile)
 
-	name := fmt.Sprintf("%s-%s", fn.FunctionName, id)
 	cmdline, err := node610CmdLine(fn, name, envfile)
 	if err != nil {
 		return nil, err
 	}
 
-	return newNodeCont(cmdline, settings, name, logger, id)
+	return newNodeCont(cmdline, settings, name, logger)
 }
 
 func node610CmdLine(fn formation.Function, name string, envfile string) ([]string, error) {

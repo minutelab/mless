@@ -3,8 +3,6 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"os"
 	"os/exec"
 	"time"
 
@@ -15,7 +13,8 @@ import (
 // stdiocont is a runtime container that communication with the container over stdin/stdout
 // (based on jproc)
 type stdiocont struct {
-	proc *jproc.Process
+	proc   *jproc.Process
+	logger Logger
 }
 
 func (s *stdiocont) Done() <-chan struct{} { return s.proc.Done() }
@@ -34,13 +33,13 @@ func (s *stdiocont) Invoke(event interface{}, context lambda.Context, deadline t
 		return nil, err
 	}
 
-	return processReply(reply, context.RequestID)
+	return processReply(reply, context.RequestID, s.logger)
 }
 
-func newStdiocont(cmdline []string, settings lambda.StartupRequest, name string, id string) (Container, error) {
+func newStdiocont(cmdline []string, settings lambda.StartupRequest, logger Logger) (Container, error) {
 	cmd := exec.Command(cmdline[0], cmdline[1:]...)
 
-	p, err := jproc.StartWithStderr(cmd, func(s string) { fmt.Fprintf(os.Stderr, "rid-%s: %s\n", id, s) })
+	p, err := jproc.StartWithStderr(cmd, logger.StdErr)
 	if err != nil {
 		return nil, err
 	}
@@ -55,5 +54,8 @@ func newStdiocont(cmdline []string, settings lambda.StartupRequest, name string,
 		return nil, errors.New("runner initialization failed")
 	}
 
-	return &stdiocont{p}, nil
+	return &stdiocont{
+		proc:   p,
+		logger: logger,
+	}, nil
 }

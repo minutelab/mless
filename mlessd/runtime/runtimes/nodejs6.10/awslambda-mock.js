@@ -125,12 +125,10 @@ invokeServer.start()
 
 module.exports = {
   initRuntime: function() {
-        systemLog('START initRuntime');
         process.stdout.write(JSON.stringify({OK:true}))
         return OPTIONS
   },
   waitForInvoke: function(fn) {
-    systemLog('waitForInvoke called')
     invokeServer.wait( (err,msg,response) => {
         if (err != null) {
             systemLog('recived message error: ' + err)
@@ -171,20 +169,17 @@ module.exports = {
     var diffMs = hrTimeMs(process.hrtime(start))
     var billedMs = Math.min(100 * (Math.floor(diffMs / 100) + 1), TIMEOUT * 1000)
     systemLog('END RequestId: ' + invokeId)
-    systemLog([
-      'REPORT RequestId: ' + invokeId,
-      'Duration: ' + diffMs.toFixed(2) + ' ms',
-      'Billed Duration: ' + billedMs + ' ms',
-      'Memory Size: ' + MEM_SIZE + ' MB',
-      'Max Memory Used: ' + Math.round(process.memoryUsage().rss / (1024 * 1024)) + ' MB',
-      '',
-    ].join('\t'))
 
     process.stdout.write(JSON.stringify({
         result:JSON.parse(resultStr),
         errortype:errType,
         invokeid:invokeId,
         errors: errType!=null,
+        billing: {
+            duration: diffMs,
+            memory: MEM_SIZE,
+            Used: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+        }
     }))
     invokeServer.start()
   },

@@ -46,6 +46,14 @@ type InvokeReply struct {
 	ErrorType string          `json:"errortype"`
 	InvokeID  string          `json:"invokeid"`
 	Errors    bool            `json:"errors,omitempty"`
+	Billing   ReqeustBilling  `json:"billing"`
+}
+
+// ReqeustBilling is the "billing record per invocation"
+type ReqeustBilling struct {
+	Duraion float64 `json:"duration"` // millisecond
+	Memory  string  `json:"memory"`   // memroy size (should we have it here?)
+	Used    int     `json:"used"`     // memory used (MB)
 }
 
 // Context include the context data that is passed to the client

@@ -37,7 +37,12 @@ def proxy(event, context, server=None, funcName=None):
         content=e.read()
         raise RuntimeError("ServerError: %s: %s" % (e.code, content))
 
-    response = f.read()
+    response = f.read().decode("utf-8")
     f.close()
-    print("response:" +response)
-    return response
+    print("response:" + response)
+    try:
+        res = json.loads(response)
+        return res
+    except Exception as e:
+        print(e)
+        return response

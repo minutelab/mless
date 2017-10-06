@@ -63,6 +63,12 @@
 			"revisionTime": "2017-06-22T23:59:02Z"
 		},
 		{
+			"checksumSHA1": "uopGHAunQn3o9PC8yAfOfrmdn10=",
+			"path": "github.com/logrusorgru/aurora",
+			"revision": "b9c3722b64a1976e0624448ee7f5a0744b8cf629",
+			"revisionTime": "2017-08-18T11:33:00Z"
+		},
+		{
 			"checksumSHA1": "cTDA66oZUy18cIzJsU1diKq+9CE=",
 			"path": "github.com/mattn/go-colorable",
 			"revision": "ad5389df28cdac544c99bd7b9161a0b5b6ca9d1b",
@@ -105,7 +111,11 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "9aade4d3a3b7e6d876cd3823ad20ec45fc035402",
 			"revisionTime": "2017-09-05T23:24:40Z"
+		},
+		{
+			"path": "https://github.com/logrusorgru/aurora",
+			"revision": ""
 		}
 	],
-	"rootPath": "bitbucket.org/minutelab/mless"
+	"rootPath": "github.com/minutelab/mless"
 }

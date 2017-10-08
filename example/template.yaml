@@ -56,3 +56,4 @@ Resources:
         Variables:
             ENV_TEST: Test
       Mless:
+            Debugger: false

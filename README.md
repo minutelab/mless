@@ -40,8 +40,7 @@ The following limitations should be expected:
     * nodejs6.10 partially supported
       * You can proxy to nodeJS lambda functions running locally
       * Currently we don't have proxy in nodejs, so the proxy must be in python
-      * Remote debugging currently not supported
- * Only python serverless environment is supported (both python 2.7 and python 3.6)
+      * Remote debugging available both with the legacy debugger and inspector protocols
  * No authentication/security is currently available for data transfer between the Lambda proxy and the lab environment where the code actually runs.
 
 On the other hand -

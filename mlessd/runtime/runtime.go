@@ -23,6 +23,11 @@ var (
 func Init(dir, ip string) {
 	baseDir = dir
 	desktopIP = ip
+	formation.SetConfProcessor(func(fn *formation.Function) error {
+		var err error
+		fn.Mless.Debugger, err = parseDebugger(*fn)
+		return err
+	})
 }
 
 // Container is a specific runtime container
@@ -38,14 +43,14 @@ type Container interface {
 }
 
 // New create a new runner
-func New(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
+func New(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger, debug bool) (Container, error) {
 	switch fn.Runtime {
 	case "python2.7":
-		return newPython("2.7", fn, settings, name, logger)
+		return newPython("2.7", fn, settings, name, logger, debug)
 	case "python3.6":
-		return newPython("3.6", fn, settings, name, logger)
+		return newPython("3.6", fn, settings, name, logger, debug)
 	case "nodejs6.10":
-		return newNode610(fn, settings, name, logger)
+		return newNode610(fn, settings, name, logger, debug)
 	}
 
 	return nil, fmt.Errorf("no such runtime: %s", fn.Runtime)

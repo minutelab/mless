@@ -27,25 +27,24 @@ func (r *runner) IsRunning() bool {
 	}
 }
 
-func newRunner(f formation.Function, env map[string]string) (runtime.Container, error) {
+func allocateName(f formation.Function) (string, runtime.Logger) {
 	id := atomic.AddUint32(&rid, 1)
 	name := fmt.Sprintf("%s-%d", f.FunctionName, id)
-	logger := newLogger(name, f.FunctionName, f.Runtime)
 
+	return name, newLogger(name, f.FunctionName, f.Runtime)
+}
+
+func newRunner(f formation.Function, env map[string]string, name string, logger runtime.Logger, debug bool) (runtime.Container, error) {
 	settings := lambda.StartupRequest{
 		Env:     env,
 		Handler: f.Handler,
 	}
 
-	p, err := runtime.New(f, settings, name, logger)
+	p, err := runtime.New(f, settings, name, logger, debug)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.ContainerEvent("Started", nil)
-	go func() {
-		<-p.Done()
-		logger.ContainerEvent("Terminated", p.Err())
-	}()
 	return p, nil
 }

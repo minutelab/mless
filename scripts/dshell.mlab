@@ -4,6 +4,7 @@ FROM golang:1.9
 
 FLAG name=mless "environment name (for multiple distinct copies)"
 FLAG sam="$spath/../example" "sam source directory"
+FLAG dport=5858 "nodejs debug port"
 
 NAME -domain mless
 
@@ -21,11 +22,11 @@ SHARE /go/pkg VOLUME:${name}_cache/pkg
 SHARE ${SRC} .
 SHARE /sam $sam
 
-
 WORKDIR ${SRC}
 
 
 EXPOSE -both 8000 8000
+EXPOSE 5858 $dport
 BACKCONN 5678
 
 # force subcontainer conntetion to route through this one to benefit from the BACKCONN

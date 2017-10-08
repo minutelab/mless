@@ -4,7 +4,9 @@ FROM lambci/lambda:nodejs6.10
 
 FLAG name=mless-nodejs610
 FLAG dir
-flag envfile "file containing environemnt defentitions"
+FLAG envfile "file containing environemnt defentitions"
+FLAG debugger
+FLAG dport=0
 
 NAME $name
 
@@ -19,16 +21,32 @@ USER sbx_user1051
 
 SHARE /var/task $dir
 
+EXPOSE 5858 $dport
+
 START << END
+  set -x
   if [ -e /tmp/env ]
   then
     . /tmp/env
     rm /tmp/env
   fi
 
-   /var/lang/bin/node --max-old-space-size=1228 \
-                          --max-semi-space-size=77  \
-                          --max-executable-size=154 \
-                          --expose-gc               \
-                          /var/runtime/node_modules/awslambda/index.js
+  case "$debugger" in
+  legacy)    debug="--debug-brk=5858"
+             ;;
+  inspector) debug="--inspect=5858 --debug-brk"
+             ;;
+  '')
+             ;;
+  *)
+             echo "unsupported debugger: $debugger"
+             exit 10
+  esac
+
+  /var/lang/bin/node --max-old-space-size=1228 \
+                     --max-semi-space-size=77  \
+                     --max-executable-size=154 \
+                     --expose-gc               \
+                     \$debug                   \
+                     /var/runtime/node_modules/awslambda/index.js
 END

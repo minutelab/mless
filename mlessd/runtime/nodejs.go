@@ -1,8 +1,10 @@
 package runtime
 
 import (
+	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/minutelab/mless/formation"
 	"github.com/minutelab/mless/lambda"
@@ -19,14 +21,14 @@ import (
 //
 // Then when we have a reply we send it on stdout. So we end up with a strangly mixed protocol, but it work
 
-func newNode610(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
+func newNode610(fn formation.Function, settings lambda.StartupRequest, name string, logger Logger, debug bool) (Container, error) {
 	envfile, err := writeEnvFile(settings, name)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(envfile)
 
-	cmdline, err := node610CmdLine(fn, name, envfile)
+	cmdline, err := node610CmdLine(fn, name, envfile, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -34,12 +36,41 @@ func newNode610(fn formation.Function, settings lambda.StartupRequest, name stri
 	return newNodeCont(cmdline, settings, name, logger)
 }
 
-func node610CmdLine(fn formation.Function, name string, envfile string) ([]string, error) {
+func node610CmdLine(fn formation.Function, name string, envfile string, debug bool) ([]string, error) {
 	cmdline := []string{
 		path.Join(baseDir, "nodejs6.10/nodejs6.10.mlab"),
 		"-name", name,
 		"-dir", fn.Code(),
 		"-envfile", envfile,
 	}
+
+	if debug && fn.Mless.Debugger != nil {
+		cmdline = append(cmdline,
+			"-debugger", string(fn.Mless.Debugger.(nodeDebugger)),
+			"-dport", "5858",
+		)
+	}
 	return cmdline, nil
 }
+
+func parseNodeDebugger(fn formation.Function) (Debugger, error) {
+	switch dbg := fn.Mless.Debugger.(type) {
+	case bool:
+		if dbg {
+			return nodeDebugger("legacy"), nil
+		}
+		return nil, nil
+	case string:
+		dbg = strings.ToLower(dbg)
+		if dbg == "legacy" || dbg == "inspector" {
+			return nodeDebugger(dbg), nil
+		}
+		return nil, fmt.Errorf("unsupported nodejs debugger: %s", dbg)
+	default:
+		return nil, fmt.Errorf("unsupported nodejs debugger defenition: %v", dbg)
+	}
+}
+
+type nodeDebugger string
+
+func (p nodeDebugger) ReservationKey() string { return "nodejs" }

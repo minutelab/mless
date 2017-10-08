@@ -17,6 +17,13 @@ import (
 	"github.com/minutelab/mless/util/ldebug"
 )
 
+var confProcessor func(fn *Function) error
+
+// SetConfProcessor set soemthing that can farther process function configuration
+func SetConfProcessor(f func(fn *Function) error) {
+	confProcessor = f
+}
+
 // Functions represent a SAM template file
 // It contain the functions and has the ability to reload itself when needed.
 type Functions struct {
@@ -43,7 +50,7 @@ type Function struct {
 
 // Mless contain mless specific paratmers for a function
 type Mless struct {
-	Debugger string // kind of debugger to invoke (empty means no debugger)
+	Debugger interface{} `json:",omitempty"` // details of debugger to invoke (nil means no debugger)
 }
 
 // New Initialize a new template and read the initial content
@@ -113,6 +120,7 @@ func (t *Functions) Refresh() error {
 		t.functions = funcs
 		t.modTime = mod
 	}
+
 	if err != nil {
 		fmt.Println("Error reading template: ", err)
 	} else {
@@ -147,14 +155,19 @@ func (t *Functions) read(prev time.Time) (map[string]Function, time.Time, error)
 			template:              t,
 		}
 
+		fn.fix(name)
+
 		if mless, err := loadMlessParams(cfTemplate, name); err == nil {
 			fn.Mless = *mless
 		} else {
 			fn.warn(err)
 		}
 
-		fn.fix(name)
-
+		if confProcessor != nil {
+			if err := confProcessor(&fn); err != nil {
+				fn.warn(err)
+			}
+		}
 		funcs[name] = fn
 	}
 	return funcs, modTime, nil

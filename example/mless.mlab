@@ -4,6 +4,8 @@ FROM minutelab/mless
 
 FLAG port=8000 "port to use"
 FLAG name=mless "script name"
+FLAG noded=5858 "nodejs debug port"
+FLAG pythond=5678 "python debug port"
 
 NAME -domain $name
 
@@ -12,7 +14,10 @@ SHARE /sam $spath
 EXPORT MLESS_DESKTOP=$parentip
 
 EXPOSE -both 8000 $port
+EXPOSE 5858 $noded
+EXPOSE 5678 $pythond
 BACKCONN 5678
+
 
 # force subcontainer conntetion to route through this one to benefit from the BACKCONN
 NETDEF 192.168.200.0/24 -default

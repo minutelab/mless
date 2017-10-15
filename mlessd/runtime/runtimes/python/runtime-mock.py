@@ -15,8 +15,14 @@ os.dup2(2,1)
 
 orig_stderr = sys.stderr
 
+if os.environ.get('_MLESS_DEBUGGER') == "ptvsd":
+    import ptvsd
+    ptvsd.enable_attach(secret=None)
+
+
 def eprint(*args, **kwargs):
     print(*args, file=orig_stderr, **kwargs)
+    sys.stdout.flush()
 
 
 def _random_invoke_id():
@@ -99,6 +105,7 @@ def receive_start():
         eprint("setting env %s=%s" % (k,msg["env"][k]))
         os.environ[k] = msg["env"][k]
 
+    eprint("Debugger: ", os.environ.get('_MLESS_DEBUGGER'))
     if os.environ.get('_MLESS_DEBUGGER') == "pydevd":
         dhost = os.environ.get('_MLESS_DEBUG_HOST')
         eprint("Need to start debugger: "+dhost)
@@ -108,6 +115,10 @@ def receive_start():
         import pydevd
         pydevd.settrace(host=dhost, suspend=False, stdoutToServer=True, stderrToServer=True)
         eprint("after calling settrace")
+    elif os.environ.get('_MLESS_DEBUGGER') == "ptvsd":
+        eprint("Waiting for debugger to attach")
+        ptvsd.wait_for_attach()
+        eprint("Debugger attached")
 
     return (
         _random_invoke_id(),

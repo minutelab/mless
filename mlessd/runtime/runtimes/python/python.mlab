@@ -5,10 +5,11 @@ FROM lambci/lambda:python${ver}
 FLAG ver=3.6 "python version 2.7/3.6"
 FLAG name=mless-python
 FLAG dir
+flag envfile "file containing environemnt defentitions"
 FLAG debugger "debugger to use"
 flag dhost "debugger host"
 flag desktop "path to sources on desktop"
-flag envfile "file containing environemnt defentitions"
+flag dport=0 "debugger listening port"
 
 NAME $name
 
@@ -17,8 +18,13 @@ USER root
 RUN << END
   case "$debugger" in
     pydevd)
-      yum install -y python27-pip
+      [ "$ver" = 2.7 ] && yum install -y python27-pip
       pip install pydevd
+      ;;
+    ptvsd)
+      [ "$ver" = 2.7 ] && yum install -y python27-pip
+      # Fixing the version to 3.0.0 per https://github.com/DonJayamanne/pythonVSCode/issues/981
+      pip install ptvsd==3.0.0
       ;;
     '')
       ;;
@@ -41,6 +47,7 @@ EXPORT _MLESS_DEBUG_HOST=$dhost
 EXPORT _MLESS_DESKTOP_SOURCES=$desktop
 
 SHARE /var/task $dir
+EXPOSE 5678 $dport
 
 START << END
   if [ -e /tmp/env ]

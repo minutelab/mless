@@ -35,12 +35,23 @@ func pythonCmdLine(ver string, fn formation.Function, name string, envfile strin
 		"-envfile", envfile,
 	}
 
-	if debug && fn.Mless.Debugger != nil {
+	if !debug || fn.Mless.Debugger == nil {
+		return cmdline, nil
+	}
+
+	debugger := fn.Mless.Debugger.(pythonDebugger)
+	cmdline = append(cmdline, "-debugger", string(debugger))
+
+	switch debugger {
+	case "pydevd":
 		cmdline = append(cmdline,
-			"-debugger", string(fn.Mless.Debugger.(pythonDebugger)),
 			"-dhost", desktopIP,
 			"-desktop", fn.Desktop(),
 		)
+	case "ptvsd":
+		cmdline = append(cmdline, "-dport", "5678")
+	default:
+		return nil, fmt.Errorf("unsupported python debugger: %s", debugger)
 	}
 	return cmdline, nil
 }
@@ -56,6 +67,8 @@ func parsePythonDebugger(fn formation.Function) (Debugger, error) {
 		return nil, nil
 	case "pydevd", "pydev":
 		return pythonDebugger("pydevd"), nil
+	case "ptvsd":
+		return pythonDebugger("ptvsd"), nil
 	default:
 		return nil, fmt.Errorf("unsupported python debugger: %s", tp)
 	}
@@ -63,4 +76,4 @@ func parsePythonDebugger(fn formation.Function) (Debugger, error) {
 
 type pythonDebugger string
 
-func (p pythonDebugger) ReservationKey() string { return "python" }
+func (p pythonDebugger) ReservationKey() string { return string(p) }

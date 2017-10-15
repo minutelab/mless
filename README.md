@@ -47,6 +47,17 @@ On the other hand -
  * Expect frequent updates and added features
  * We are eager to get feedback
 
+## Supported environment
+
+| Environment | Runtime | Debug | Proxy |
+| ----------- | ------- | ----- | ----- |
+| python 2.7  | :white_check_mark: |  :white_check_mark: pydevd, ptvsd | :white_check_mark: |
+| python 3.6  | :white_check_mark: |  :white_check_mark: pydevd, ptvsd | :white_check_mark: |
+| nodejs 6.10 | :white_check_mark: | :white_check_mark:                | :x:                |
+| nodejs 4.3  | :x:                | :x:                               | :x:                |
+| java        | :x:                | :x:                               | :x:                |
+| .net        | :x:                | :x:                               | :x:                |
+
 ## Technology
 
 Mless combines several technologies
@@ -188,9 +199,10 @@ You will notice that the NEW code is used:
 
 #### Running with a debugger
 
-Since we are in a proof of concept stage, only [pydevd](http://www.pydev.org) is currently supported.
-It was chosen because it is free and has integration with an IDE (it is available as a free add-on to eclipse).
-Technically it can be quite challenging since the process under debugging opens a connection to the debugger running on the desktop. Minute Lab addresses the challenges quite efficiently.
+The instructions below are for running with [pydevd](http://www.pydev.org) (using [eclipse](https://www.eclipse.org/) or [LiClipse](http://www.liclipse.com)) as IDE.
+(It is also possible to debug using [Visual Studio Code](visual studio code) (`ptvsd`))
+
+Using pydevd is technically non-trivial since the process under debugging opens a connection to the debugger running on the desktop. Minute Lab addresses the challenges quite efficiently.
 
 In order to use it:
 

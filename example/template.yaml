@@ -16,6 +16,7 @@ Resources:
             ENV_TEST: Test
       Mless:
 #          Debugger: pydevd
+#          Debugger: ptvsd
 
   hash36:
     Type: AWS::Serverless::Function
@@ -27,6 +28,7 @@ Resources:
         Variables:
             ENV_TEST: Test
       Mless:
+#          Debugger: ptvsd
 #          Debugger: pydevd
 
   picHandler:

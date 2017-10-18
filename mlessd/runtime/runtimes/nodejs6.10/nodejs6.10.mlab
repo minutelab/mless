@@ -24,7 +24,6 @@ SHARE /var/task $dir
 EXPOSE 5858 $dport
 
 START << END
-  set -x
   if [ -e /tmp/env ]
   then
     . /tmp/env

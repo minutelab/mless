@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/minutelab/mless/lambda"
@@ -42,6 +43,7 @@ var (
 
 func newNodeCont(cmdline []string, settings lambda.StartupRequest, name string, logger Logger) (Container, error) {
 	cmd := exec.Command(cmdline[0], cmdline[1:]...)
+	cmd.SysProcAttr = setPdeathsig(nil, syscall.SIGKILL)
 
 	stderrCloser, err := jproc.StdErrCallback(cmd, logger.StdErr)
 	if err != nil {

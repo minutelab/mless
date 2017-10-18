@@ -100,12 +100,12 @@ func getRunner(key runnerKey, hash []byte) lambda.Invoker {
 
 func useDebugger(fn *formation.Function, container string) (bool, io.Closer, error) {
 	if fn.Mless.Debugger == nil {
-		return false, nil, nil
+		return false, nopCloser, nil
 	}
 	debugger, ok := fn.Mless.Debugger.(runtime.Debugger)
 	if !ok {
 		// no need for reservation
-		return true, nil, nil
+		return true, nopCloser, nil
 	}
 	reservation, err := reserveDebugger(debugger.ReservationKey(), container)
 	if err != nil {
@@ -144,3 +144,5 @@ func reserveDebugger(resource, container string) (io.Closer, error) {
 type closer func() error
 
 func (c closer) Close() error { return c() }
+
+var nopCloser = closer(func() error { return nil })
